@@ -1,6 +1,11 @@
-*
-!README.md
-!early-init.el
-!init.el
-!.github/
-!.LICENSE
+.cache/
+.github/
+autosave/
+eln-cache/
+elpa/
+recentf
+savehist
+README.md
+early-init.el
+init.el
+.LICENSE
