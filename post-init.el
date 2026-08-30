@@ -523,22 +523,6 @@
   (flycheck-error-list-minimum-level 'warning)
   :hook (after-init . global-flycheck-mode))
 
-;; The markdown-mode package provides a major mode for Emacs for syntax
-;; highlighting, editing commands, and preview support for Markdown documents.
-;; It supports core Markdown syntax as well as extensions like GitHub Flavored
-;; Markdown (GFM).
-(use-package markdown-mode
-  :commands (gfm-mode
-             gfm-view-mode
-             markdown-mode
-             markdown-view-mode)
-  :mode (("\\.markdown\\'" . markdown-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("README\\.md\\'" . gfm-mode))
-  :bind
-  (:map markdown-mode-map
-        ("C-c C-e" . markdown-do)))
-
 ;; Highlight uncommitted changes using diff-hl
 (use-package diff-hl
   :commands (diff-hl-mode
@@ -634,7 +618,7 @@
         (julia "https://github.com/tree-sitter/tree-sitter-julia")
         (make "https://github.com/alemuller/tree-sitter-make")
         (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-        (php "https://github.com/tree-sitter/tree-sitter-php" "v0.24.2" "php/src")
+        (php "https://github.com/tree-sitter/tree-sitter-php" "master" "php/src")
         (phpdoc "https://github.com/claytonrcarter/tree-sitter-phpdoc")
         (python "https://github.com/tree-sitter/tree-sitter-python")
         (rust "https://github.com/tree-sitter/tree-sitter-rust")
@@ -643,62 +627,80 @@
         (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
         (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
-(setopt major-mode-remap-alist
-        '((bash-mode . bash-ts-mode)
-          (c-mode . c-ts-mode)
-          (cmake-mode . cmake-ts-mode)
-          (cpp-mode . cpp-ts-mode)
-          (css-mode . css-ts-mode)
-          (go-mode . go-ts-mode)
-          (java-mode . java-ts-mode)
-          (javascript-mode . javascript-ts-mode)
-          (json-mode . json-ts-mode)
-          (markdown-mode . markdown-ts-mode)
-          (php-mode . php-ts-mode)
-          (python-mode . python-ts-mode)
-          (rust-mode . rust-ts-mode)
-          (toml-mode . toml-ts-mode)
-          (yaml-mode . yaml-ts-mode)))
+(setq major-mode-remap-alist
+      '((bash-mode . bash-ts-mode)
+        (c-mode . c-ts-mode)
+        (cmake-mode . cmake-ts-mode)
+        (cpp-mode . cpp-ts-mode)
+        (css-mode . css-ts-mode)
+        (go-mode . go-ts-mode)
+        (java-mode . java-ts-mode)
+        (javascript-mode . javascript-ts-mode)
+        (json-mode . json-ts-mode)
+        (markdown-mode . markdown-ts-mode)
+        (php-mode . php-ts-mode)
+        (python-mode . python-ts-mode)
+        (rust-mode . rust-ts-mode)
+        (toml-mode . toml-ts-mode)
+        (yaml-mode . yaml-ts-mode)))
 
 (setq treesit-load-name-override-list '((gomod "libtree-sitter-go")))
 
 ;; Set up the Language Server Protocol (LSP) servers using Eglot.
 (use-package eglot
+  :ensure nil
   :commands (eglot-ensure
              eglot-rename
              eglot-format-buffer)
   :init
   (setq eglot-autoshutdown t
-        lsp-phpactor-path "phpactor")
+        eglot-events-buffer-config '(:size 0 :format short)
+        eglot-sync-connect nil
+        lsp-phpactor-path "~/bin/phpactor")
+  :config
+  ;; Initialization options for Intelephense
+  ;; (setq-default eglot-workspace-configuration
+  ;;               '((:intelephense
+  ;;                  :files (:maxSize 5000000)
+  ;;                  :environment (:phpVersion "8.5")
+  ;;                  :format (:enable t))))
+  ;; (setq eglot-connect-timeout 60
+  ;;       eglot-events-buffer-size 0)
+  ;; Configure Eglot to enable or disable certain options for the pylsp server
+  ;; in Python development. (Note that a third-party tool,
+  ;; https://github.com/python-lsp/python-lsp-server, must be installed),
+  (setq-default eglot-workspace-configuration
+                `(:pylsp (:plugins
+                          (;; Fix imports and syntax using `eglot-format-buffer`
+                           :isort (:enabled t)
+                           :autopep8 (:enabled t)
+
+                           ;; Syntax checkers (works with Flymake)
+                           :pylint (:enabled t)
+                           :pycodestyle (:enabled t)
+                           :flake8 (:enabled t)
+                           :pyflakes (:enabled t)
+                           :pydocstyle (:enabled t)
+                           :mccabe (:enabled t)
+
+                           :yapf (:enabled :json-false)
+                           :rope_autoimport (:enabled :json-false)))))
+  :bind (:map eglot-mode-map
+              ("C-c r" . eglot-rename)
+              ("C-c a" . eglot-code-actions)
+              ("C-c f" . eglot-format-buffer)
+              ("M-." . xref-find-definitions)
+              ("M-," . xref-go-back))
   :hook
   (php-mode . eglot-ensure)
+  (php-ts-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure))
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-server-programs
-               '(php-mode . ("phpactor" "language-server"))))
-
-;; Configure Eglot to enable or disable certain options for the pylsp server
-;; in Python development. (Note that a third-party tool,
-;; https://github.com/python-lsp/python-lsp-server, must be installed),
-(add-hook 'python-mode-hook #'eglot-ensure)
-(add-hook 'python-ts-mode-hook #'eglot-ensure)
-(setq-default eglot-workspace-configuration
-              `(:pylsp (:plugins
-                        (;; Fix imports and syntax using `eglot-format-buffer`
-                         :isort (:enabled t)
-                         :autopep8 (:enabled t)
-
-                         ;; Syntax checkers (works with Flymake)
-                         :pylint (:enabled t)
-                         :pycodestyle (:enabled t)
-                         :flake8 (:enabled t)
-                         :pyflakes (:enabled t)
-                         :pydocstyle (:enabled t)
-                         :mccabe (:enabled t)
-
-                         :yapf (:enabled :json-false)
-                         :rope_autoimport (:enabled :json-false)))))
+               '(php-mode . ("phpactor" "language-server")))
+  (add-to-list 'eglot-server-programs
+               '(php-ts-mode . ("phpactor" "language-server"))))
 
 ;; Enables automatic indentation of code while typing
 (use-package aggressive-indent
@@ -843,6 +845,42 @@
   :mode("\\.fish\\'" . fish-mode)
   :custom
   (fish-enable-auto-indent t))
+
+;; The markdown-mode package provides a major mode for Emacs for syntax
+;; highlighting, editing commands, and preview support for Markdown documents.
+;; It supports core Markdown syntax as well as extensions like GitHub Flavored
+;; Markdown (GFM).
+(use-package markdown-mode
+  :commands (gfm-mode
+             gfm-view-mode
+             markdown-mode
+             markdown-view-mode)
+  :mode (("\\.markdown\\'" . markdown-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("README\\.md\\'" . gfm-mode))
+  :bind
+  (:map markdown-mode-map
+        ("C-c C-e" . markdown-do)))
+
+;; php-ts-mode
+(use-package php-ts-mode
+  :ensure nil
+  :mode ("\\.php\\'" "\\.phtml\\'")
+  :hook (php-ts-mode . eglot-ensure))
+(use-package reformatter
+  :ensure t
+  :config
+  (reformatter-define php-cs-fix
+                      :program "/usr/bin/php-cs-fixer"
+                      :args (list "fix" "--using-cache=no" "-"))
+  :hook
+  (php-mode . php-cs-fixer-on-save-mode)
+  (php-ts-mode . php-cs-fix-on-save-mode))
+(use-package flymake-phpstan
+  :ensure t
+  :hook
+  (php-mode . flymake-phpstan-turn-on)
+  (php-ts-mode . flymake-phpstan-turn-on))
 
 ;; Define a minor mode to hold some of my keybindings
 (define-minor-mode em-keymaps-mode
