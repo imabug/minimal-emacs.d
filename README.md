@@ -384,6 +384,8 @@ To configure `corfu` and `cape`, add the following to `~/.emacs.d/post-init.el`:
 
 **Note:** Setting `corfu-auto` to `t` to enable automatic completion is discouraged for both performance and security reasons. Continuous polling of heavy completion-at-point functions (CAPFs) and external LSP servers on every keystroke introduces latency. More significantly, automatic completion introduces security vulnerabilities when working with untrusted code. This background parsing forces external binaries and language servers to process buffer contents without explicit user intent, creating attack vectors for arbitrary code execution. It is recommended to activate `corfu-auto` only in directories where all files are trusted.
 
+Related article: [Why Emacs Consult async searches feel slow and how to speed them up? (consult-fd, consult-find, consult-grep, consult-ripgrep...)](https://www.jamescherti.com/emacs-consult-speed-async-searche-grep-ripgrep-fd-find/)
+
 ### Vertico, Consult, Marginalia, and Embark
 
 [Vertico](https://github.com/minad/vertico), [Consult](https://github.com/minad/consult), and [Embark](https://github.com/oantolin/embark) collectively enhance Emacs' completion and navigation capabilities.
@@ -2700,7 +2702,9 @@ If you want to maintain a strictly version-controlled, declarative configuration
 
 ### Interesting articles
 
-- [Emacs: Preventing Org-Mode formatting bleed when copy-pasting](https://www.jamescherti.com/emacs-fix-org-mode-copy-paste-yank-bleed/): Copying text from an Org buffer often results in unwanted colors, backgrounds, or text weights bleeding into the destination buffer. By default, vanilla Emacs preserves explicit text formatting (`face` properties) when copying and pasting to support rich-text environments. While standard syntax highlighting (`font-lock-face`) is automatically stripped, modes like `org-mode` rely heavily on the `face` property for their visual styling. 
+- [Optimizing Emacs startup - Guide to deferred package loading with use-package](https://www.jamescherti.com/emacs-startup-defer-use-package-performance/): As an Emacs user, your configuration can easily grow from a few lightweight adjustments to a massive, hundred-package IDE. Without careful management, Emacs startup time can degrade from sub-second execution to several seconds, or minutes, in the worst cases. Eager package loading is one common source of startup overhead. This guide explains how Emacs loads libraries, how use-package configures package loading, and how deferred loading can reduce startup time.
+
+- [Emacs: Preventing Org-Mode formatting bleed when copy-pasting](https://www.jamescherti.com/emacs-fix-org-mode-copy-paste-yank-bleed/): Copying text from an Org buffer often results in unwanted colors, backgrounds, or text weights bleeding into the destination buffer. By default, vanilla Emacs preserves explicit text formatting (`face` properties) when copying and pasting to support rich-text environments. While standard syntax highlighting (`font-lock-face`) is automatically stripped, modes like `org-mode` rely heavily on the `face` property for their visual styling.
 
 - [Securing and reducing prompts for Emacs .dir-locals.el and local variables](https://www.jamescherti.com/securing-emacs-dir-locals-el-local-variables/): Emacs automatically applies project-specific configurations through file-local and directory-local (.dir-locals.el) variables when opening a file or directory. While this feature ensures consistent settings across environments, it can cause security risks and persistent prompt fatigue when editing source code. Malicious .dir-locals.el files or file-local variables containing eval forms can execute arbitrary Lisp code if Emacs is configured to evaluate them, or if the user approves the relevant prompt by mistake. This article outlines configurations for securing file-local and directory-local variables while reducing prompts.
 
